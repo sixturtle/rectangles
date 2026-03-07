@@ -1,0 +1,17 @@
+repos:
+  # Ruff — lint + format
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
+    hooks:
+      - id: ruff          # lint check (with auto-fix)
+        args: [--fix]
+      - id: ruff-format   # code formatting
+
+  # Mypy — type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [pydantic, matplotlib, pytest]
+        args: [--strict]
+        exclude: ^examples/
