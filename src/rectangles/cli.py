@@ -72,7 +72,11 @@ def _parse_rect(value: str) -> Rectangle:
             raise argparse.ArgumentTypeError(msg) from e
     elif len(coords) == 8:
         points = [Point(x=coords[i], y=coords[i + 1]) for i in range(0, 8, 2)]
-        return Rectangle.from_points(*points)
+        try:
+            return Rectangle.from_points(*points)
+        except ValueError as e:
+            msg = f"Invalid rectangle {value}: {e}"
+            raise argparse.ArgumentTypeError(msg) from e
     else:
         msg = (
             f"Expected 4 coords (axis-aligned) or "

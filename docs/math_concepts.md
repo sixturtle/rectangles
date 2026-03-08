@@ -1,6 +1,6 @@
 # Math Concepts
 
-Five core math concepts are used to solve intersection, containment and adjacency problems for axis-aligned and general rectangles.
+Six core math concepts are used to solve intersection, containment, adjacency, and input validation problems for axis-aligned and general rectangles.
 
 
 ## 1. Parametric Line
@@ -188,17 +188,41 @@ $$
 - **Adjacency**: Comparing overlap interval against full edge intervals to classify as proper, sub-line, or partial.
 
 
+## 6. Shoelace Formula (Signed Area)
+
+The signed area of a simple polygon with vertices $(x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n)$ is:
+
+$$
+A = \frac{1}{2} \sum_{i=1}^{n} (x_i \cdot y_{i+1} - x_{i+1} \cdot y_i)
+$$
+
+where indices wrap around, i.e. $(x_{n+1}, y_{n+1}) = (x_1, y_1)$.
+
+| Sign of $A$ | Winding Order |
+|-------------|---------------|
+| $A > 0$     | Counter-clockwise (CCW) |
+| $A < 0$     | Clockwise (CW) |
+| $A = 0$     | Degenerate (collinear points) |
+
+The absolute value $|A|$ gives the true area of the polygon.
+
+**Usage**
+- **Winding-order check**: Use `signed_area > 0` to verify that input points are in counter-clockwise order.
+- **Rectangle validation**: A degenerate area ($A = 0$) indicates collinear points, which cannot form a valid rectangle.
+
+
 ## Axis-Aligned vs. Rotated: Which concepts are needed?
 
-| Concept | Axis-Aligned | Rotated |
-|---------|:------------:|:-------:|
-| 1. Parametric Line | — | ✓ |
-| 2. 2D Cross Product | — | ✓ |
-| 3. Dot Product Projection | — | ✓ |
-| 4. Cramer's Rule | — | ✓ |
-| 5. 1D Interval Overlap | ✓ | ✓ |
+| Concept | Axis-Aligned | Rotated | Validation |
+|---------|:------------:|:-------:|:----------:|
+| 1. Parametric Line | — | ✓ | — |
+| 2. 2D Cross Product | — | ✓ | — |
+| 3. Dot Product Projection | — | ✓ | — |
+| 4. Cramer's Rule | — | ✓ | — |
+| 5. 1D Interval Overlap | ✓ | ✓ | — |
+| 6. Shoelace Formula | — | — | ✓ |
 
-Axis-aligned rectangles need only **Concept 5**. Rotated rectangles require all five.
+Axis-aligned rectangles need only **Concept 5**. Rotated rectangles require **Concepts 1–5**. Input validation uses **Concept 6** for winding-order checks.
 
 
 ## Dot product vs. Cross Product of two vectors

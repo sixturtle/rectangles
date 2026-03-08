@@ -6,6 +6,8 @@ import math
 
 from pydantic import BaseModel, Field
 
+EPS = 1e-9
+
 
 class Point(BaseModel):
     """Point in 2D space."""
@@ -35,6 +37,10 @@ class Point(BaseModel):
         """Return a new Point with coordinates rounded to *ndigits* decimals."""
         return Point(x=round(self.x, ndigits), y=round(self.y, ndigits))
 
+    def distance_to(self, other: Point) -> float:
+        """Return the Euclidean distance to *other*."""
+        return math.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
+
 
 class Segment(BaseModel):
     """Segment in 2D space."""
@@ -54,7 +60,7 @@ class Rectangle(BaseModel):
     @classmethod
     def from_coords(cls, x1: float, y1: float, x2: float, y2: float) -> Rectangle:
         """Create an axis-aligned rectangle from bottom-left and top-right coords."""
-        if x1 > x2 or y1 > y2:
+        if x1 >= x2 or y1 >= y2:
             raise ValueError("Invalid rectangle coordinates.")
         return cls(
             p1=Point(x=x1, y=y1),
@@ -66,17 +72,63 @@ class Rectangle(BaseModel):
     @classmethod
     def from_points(cls, p1: Point, p2: Point, p3: Point, p4: Point) -> Rectangle:
         """Create a general rectangle from four corner points."""
+        if not cls.is_rectangle([p1, p2, p3, p4]):
+            raise ValueError("Invalid rectangle points.")
+        if not cls.is_ccw([p1, p2, p3, p4]):
+            raise ValueError("Rectangle points are not in counter-clockwise order.")
         return cls(p1=p1, p2=p2, p3=p3, p4=p4)
 
     @property
     def is_axis_aligned(self) -> bool:
         """True if every edge is horizontal or vertical."""
-        eps = 1e-9
         for seg in self.segments:
             dx = abs(seg.p1.x - seg.p2.x)
             dy = abs(seg.p1.y - seg.p2.y)
-            if dx > eps and dy > eps:
+            if dx > EPS and dy > EPS:
                 return False
+        return True
+
+    @staticmethod
+    def signed_area(vertices: list[Point]) -> float:
+        """Compute the signed area of a polygon (shoelace formula)."""
+        n = len(vertices)
+        area = 0.0
+        for i in range(n):
+            j = (i + 1) % n
+            area += vertices[i].x * vertices[j].y
+            area -= vertices[j].x * vertices[i].y
+        return area / 2.0
+
+    @staticmethod
+    def is_ccw(vertices: list[Point]) -> bool:
+        """Check if polygon vertices are in counter-clockwise order."""
+        return Rectangle.signed_area(vertices) > 0
+
+    @staticmethod
+    def is_rectangle(vertices: list[Point]) -> bool:
+        """Check if four vertices form a rectangle.
+
+        Uses equal-length bisecting diagonals.
+        """
+        if len(vertices) != 4:
+            return False
+
+        p1, p2, p3, p4 = vertices
+
+        # Diagonals must bisect each other
+        mid1 = Point(x=(p1.x + p3.x) / 2, y=(p1.y + p3.y) / 2)
+        mid2 = Point(x=(p2.x + p4.x) / 2, y=(p2.y + p4.y) / 2)
+        if abs(mid1.x - mid2.x) > EPS or abs(mid1.y - mid2.y) > EPS:
+            return False
+
+        # Diagonals must be non-zero and equal length
+        d1 = p1.distance_to(p3)
+        d2 = p2.distance_to(p4)
+        if d1 < EPS or d2 < EPS:
+            return False
+        if abs(d1 - d2) > EPS:
+            return False
+
         return True
 
     def rotated(

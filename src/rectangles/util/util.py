@@ -1,7 +1,7 @@
-"""General utility functions for rectangle analysis.
+"""Shared math utilities for rectangle analysis.
 
-Shared math primitives used by the general (non-axis-aligned) intersection,
-containment, and adjacency strategies.
+Provides geometric primitives (segment intersection, collinearity,
+point-in-polygon) used across axis-aligned and general strategies.
 """
 
 from __future__ import annotations
